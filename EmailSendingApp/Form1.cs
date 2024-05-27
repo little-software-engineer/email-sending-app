@@ -5,6 +5,7 @@ using OfficeOpenXml;
 using System.IO;
 using Microsoft.Office.Interop.Outlook;
 using System.Windows.Forms;
+using System.Globalization;
 
 namespace EmailSendingApp
 {
@@ -192,6 +193,58 @@ namespace EmailSendingApp
                 }
             }
         }
+        private string GetSubjectFromDataFile(string fileName)
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines("data.txt");
+
+                // Iterate over each line in the data.txt file
+                foreach (string line in lines)
+                {
+                    string[] parts = line.Split(new string[] { "---" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 3 && parts[1].Trim().Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Return the subject from the matching entry
+                        return parts[0].Trim();
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("Error reading data file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return null; // If no matching entry is found, return null
+        }
+        private string GetCurrentWeek()
+        {
+            try
+            {
+                // Get the current date
+                DateTime currentDate = DateTime.Now;
+
+                // Return the ISO 8601 week number of the current date
+                return GetIso8601WeekOfYear(currentDate).ToString();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("Error getting current week from Outlook calendar: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return "Unknown";
+            }
+        }
+
+        private int GetIso8601WeekOfYear(DateTime date)
+        {
+            DayOfWeek day = CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(date);
+            if (day >= DayOfWeek.Monday && day <= DayOfWeek.Wednesday)
+            {
+                date = date.AddDays(3);
+            }
+
+            // Return the ISO 8601 week number
+            return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+        }
 
         private List<string> GetRecipientsFromDataFile(string filePath)
         {
@@ -271,33 +324,49 @@ namespace EmailSendingApp
                     // Append Outlook signature to the email body content
                     string fullEmailBody = emailBodyContent + GetOutlookSignature();
 
-                    // Create Outlook application and mail item
-                    Outlook.Application outlookApp = new Outlook.Application();
-                    Outlook.MailItem mailItem = (Outlook.MailItem)outlookApp.CreateItem(Outlook.OlItemType.olMailItem);
-
-                    // Add recipients
-                    foreach (string recipient in recipients)
-                    {
-                        mailItem.Recipients.Add(recipient);
-                    }
-
-                    // Set subject
-                    mailItem.Subject = ""; // Subject will be defined by the user in Outlook.
-
-                    // Set email body
-                    mailItem.HTMLBody = fullEmailBody;
-
-                    // Add attachments
+                    // Iterate over each attachment file path
                     foreach (string attachmentFilePath in attachmentFilePaths)
                     {
+                        string fileName = Path.GetFileNameWithoutExtension(attachmentFilePath);
+
+                        // Get the subject from data.txt based on the file name
+                        string subject = GetSubjectFromDataFile(fileName);
+
+                        if (string.IsNullOrEmpty(subject))
+                        {
+                            MessageBox.Show("Subject not found in data file for " + fileName + ".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            continue;
+                        }
+
+                        // Concatenate with "CW Current Week"
+                        string emailSubject = subject + " CW" + GetCurrentWeek();
+
+                        // Create Outlook application and mail item
+                        Outlook.Application outlookApp = new Outlook.Application();
+                        Outlook.MailItem mailItem = (Outlook.MailItem)outlookApp.CreateItem(Outlook.OlItemType.olMailItem);
+
+                        // Add recipients
+                        foreach (string recipient in recipients)
+                        {
+                            mailItem.Recipients.Add(recipient);
+                        }
+
+                        // Set subject
+                        mailItem.Subject = emailSubject;
+
+                        // Set email body
+                        mailItem.HTMLBody = fullEmailBody;
+
+                        // Add attachments
                         if (!string.IsNullOrEmpty(attachmentFilePath))
                         {
                             mailItem.Attachments.Add(attachmentFilePath);
                         }
+
+                        // Display email
+                        mailItem.Display(false);
                     }
 
-                    // Display email
-                    mailItem.Display(false);
                     // MessageBox.Show("Emails sent successfully.");
                 }
                 else
@@ -357,7 +426,7 @@ namespace EmailSendingApp
 
         }
 
-      
+
 
         private void pictureBox2_Click(object sender, EventArgs e)
         {

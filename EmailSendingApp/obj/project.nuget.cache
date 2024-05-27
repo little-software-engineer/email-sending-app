@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "cVZM6kv4u7FzAbn88Wnc753/fB1fLLHM7Qb/5Vi10dJyIVvw0rXpYZ0Ao4z5buKEmi8cQerUM/Ep0N0SSwEgdQ==",
+  "dgSpecHash": "Squc04xaP/IFLA/Oju4Dx9pVL6z20cao2hZtnMz7kOw7qrSxzgBlrMP4LlIgNk3DtUZRcIIA3ZfqFq+WdzDzpA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\aca\\Desktop\\EmailSendingAppSourceCode\\EmailSendingApp\\EmailSendingApp\\EmailSendingApp.csproj",
+  "projectFilePath": "C:\\Users\\aca\\Documents\\EmailSendingAppSourceCode\\EmailSendingApp\\EmailSendingApp\\EmailSendingApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\aca\\.nuget\\packages\\epplus\\7.0.10\\epplus.7.0.10.nupkg.sha512",
     "C:\\Users\\aca\\.nuget\\packages\\epplus.interfaces\\6.1.1\\epplus.interfaces.6.1.1.nupkg.sha512",
