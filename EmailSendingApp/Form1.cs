@@ -217,6 +217,31 @@ namespace EmailSendingApp
 
             return null; // If no matching entry is found, return null
         }
+
+        private string GetSupplierFromDataFile(string fileName)
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines("data.txt");
+
+                // Iterate over each line in the data.txt file
+                foreach (string line in lines)
+                {
+                    string[] parts = line.Split(new string[] { "---" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 3 && parts[1].Trim().Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Return the subject from the matching entry
+                        return parts[1].Trim();
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("Error reading data file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return null; // If no matching entry is found, return null
+        }
         private string GetCurrentWeek()
         {
             try
@@ -331,6 +356,7 @@ namespace EmailSendingApp
 
                         // Get the subject from data.txt based on the file name
                         string subject = GetSubjectFromDataFile(fileName);
+                        string supplier = GetSupplierFromDataFile(fileName);
 
                         if (string.IsNullOrEmpty(subject))
                         {
@@ -338,8 +364,14 @@ namespace EmailSendingApp
                             continue;
                         }
 
+                        if (string.IsNullOrEmpty(supplier))
+                        {
+                            MessageBox.Show("Supplier not found in data file for " + fileName + ".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            continue;
+                        }
+
                         // Concatenate with "CW Current Week"
-                        string emailSubject = subject + " CW" + GetCurrentWeek();
+                        string emailSubject = "CW" + GetCurrentWeek() + " " + supplier + " " + subject;
 
                         // Create Outlook application and mail item
                         Outlook.Application outlookApp = new Outlook.Application();
